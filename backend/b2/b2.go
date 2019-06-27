@@ -1087,10 +1087,9 @@ func (f *Fs) Copy(ctx context.Context, src fs.Object, remote string) (fs.Object,
 		fs.Debugf(src, "Can't copy - not same remote type")
 		return nil, fs.ErrorCantCopy
 	}
-	srcFs := srcObj.fs
-	if srcFs.bucket != f.bucket {
-		fs.Debugf(src, "Can't copy - not same bucket")
-		return nil, fs.ErrorCantCopy
+	destBucketID, err := f.getBucketID()
+	if err != nil {
+		return nil, err
 	}
 	opts := rest.Opts{
 		Method: "POST",
@@ -1100,6 +1099,7 @@ func (f *Fs) Copy(ctx context.Context, src fs.Object, remote string) (fs.Object,
 		SourceID:          srcObj.id,
 		Name:              f.root + remote,
 		MetadataDirective: "COPY",
+		DestBucketID:      destBucketID,
 	}
 	var response api.FileInfo
 	err = f.pacer.Call(func() (bool, error) {
